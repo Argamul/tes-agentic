@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nlp-ai-service
+  namespace: nlp-ai
+  labels:
+    app: nlp-ai-service
+    version: v1.0.0
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+    prometheus.io/path: "/metrics"
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+spec:
+  selector:
+    app: nlp-ai-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+      protocol: TCP
+    - name: metrics
+      port: 9090
+      targetPort: 8000
+      protocol: TCP
+  type: ClusterIP
+  sessionAffinity: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nlp-ai-service-headless
+  namespace: nlp-ai
+  labels:
+    app: nlp-ai-service
+    version: v1.0.0
+spec:
+  selector:
+    app: nlp-ai-service
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      protocol: TCP
+  type: ClusterIP
+  clusterIP: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nlp-ai-service-external
+  namespace: nlp-ai
+  labels:
+    app: nlp-ai-service
+    version: v1.0.0
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-connection-draining-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-connection-draining-timeout: "60"
+spec:
+  selector:
+    app: nlp-ai-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+      protocol: TCP
+  type: LoadBalancer
+  loadBalancerSourceRanges:
+    - 0.0.0.0/0
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nlp-ai-service-ingress
+  namespace: nlp-ai
+  labels:
+    app: nlp-ai-service
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+    - hosts:
+        - nlp-ai.yourdomain.com
+      secretName: nlp-ai-tls
+  rules:
+    - host: nlp-ai.yourdomain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nlp-ai-service
+                port:
+                  number: 80
+
+
+

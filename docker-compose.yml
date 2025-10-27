@@ -1,0 +1,234 @@
+
+services:
+  api:
+    build: 
+      context: .
+      target: production
+    container_name: nlp-ai-service
+    ports:
+      - "8000:8000"
+      - "8443:8443"  # HTTPS port
+    environment:
+      # API Keys and Authentication
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      
+      # Redis Configuration
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_CACHE_ENABLED=true
+      - REDIS_CACHE_TTL_SECONDS=${REDIS_CACHE_TTL_SECONDS:-600}
+      
+      # LLM Configuration
+      - DEFAULT_LLM_PROVIDER=${DEFAULT_LLM_PROVIDER:-openai}
+      - LLM_PROVIDER_FALLBACK_ORDER=${LLM_PROVIDER_FALLBACK_ORDER:-openai,anthropic,llama}
+      - TEMPERATURE=${TEMPERATURE:-0.7}
+      - MAX_TOKENS=${MAX_TOKENS:-1000}
+      - OPENAI_DEFAULT_MODEL=${OPENAI_DEFAULT_MODEL:-gpt-3.5-turbo}
+      - OPENAI_FALLBACK_MODEL=${OPENAI_FALLBACK_MODEL:-gpt-3.5-turbo-16k}
+      
+      # Enhanced observability
+      - PROMETHEUS_METRICS_ENDPOINT=/metrics
+      - ENABLE_METRICS=true
+      - OTEL_METRICS_ENABLED=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:14268/api/traces}
+      - OTEL_EXPORTER_OTLP_HEADERS=${OTEL_EXPORTER_OTLP_HEADERS:-}
+      - OTEL_SERVICE_NAMESPACE=nlp-ai
+      - SERVICE_VERSION=1.0.0
+      
+      # Rate limiting
+      - RATE_LIMIT_REQUESTS=${RATE_LIMIT_REQUESTS:-100}
+      - RATE_LIMIT_WINDOW_SECONDS=${RATE_LIMIT_WINDOW_SECONDS:-60}
+      - RATE_LIMIT_STRATEGY=${RATE_LIMIT_STRATEGY:-fixed_window}
+      - RATE_LIMIT_EXEMPT_PATHS=/health,/metrics,/docs,/openapi.json,/redoc
+      - RATE_LIMIT_USER_LIMITS=${RATE_LIMIT_USER_LIMITS:-}
+      
+      # TLS configuration
+      - TLS_ENABLED=${TLS_ENABLED:-false}
+      - TLS_CERT_FILE=${TLS_CERT_FILE:-./certs/server.crt}
+      - TLS_KEY_FILE=${TLS_KEY_FILE:-./certs/server.key}
+      - TLS_CA_FILE=${TLS_CA_FILE:-./certs/ca.crt}
+      - TLS_MIN_VERSION=${TLS_MIN_VERSION:-TLSv1.2}
+      - TLS_VERIFY_CLIENT=${TLS_VERIFY_CLIENT:-false}
+      - TLS_CERT_VALIDATION=${TLS_CERT_VALIDATION:-true}
+      
+      # ELK Stack integration
+      - ELASTIC_APM_ENABLED=${ELASTIC_APM_ENABLED:-false}
+      - ELASTIC_APM_SERVER_URL=${ELASTIC_APM_SERVER_URL:-http://elasticsearch:8200}
+      - ELASTIC_APM_SECRET_TOKEN=${ELASTIC_APM_SECRET_TOKEN:-}
+      
+      # Service configuration
+      - SERVICE_NAME=nlp-ai-microservice
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      
+      # Vector Database Configuration
+      - ELASTICSEARCH_URL=${ELASTICSEARCH_URL:-http://elasticsearch:9200}
+      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
+      - CHROMA_PERSIST_DIRECTORY=${CHROMA_PERSIST_DIRECTORY:-/app/data/chroma}
+      
+      # External Service URLs
+      - USER_SERVICE_URL=${USER_SERVICE_URL:-http://user-service:8001}
+      - QUESTION_SERVICE_URL=${QUESTION_SERVICE_URL:-http://question-service:8002}
+      - API_GATEWAY_URL=${API_GATEWAY_URL:-http://api-gateway:8003}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./certs:/app/certs
+    depends_on:
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: [
+      "redis-server",
+      "--appendonly", "yes",
+      "--appendfsync", "everysec",
+      "--maxmemory", "256mb",
+      "--maxmemory-policy", "allkeys-lru",
+      "--save", "900 1",
+      "--save", "300 10",
+      "--save", "60 10000"
+    ]
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  qdrant:
+    image: qdrant/qdrant:v1.7.3
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboard.json:/etc/grafana/provisioning/dashboards/dashboard.json:ro
+      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # ELK Stack - Logstash
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./logstash/config:/usr/share/logstash/config:ro
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+
+  # ELK Stack - Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+
+  # Jaeger for distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  elasticsearch_data:
+  qdrant_data:
+  prometheus_data:
+  grafana_data:
+
+
+

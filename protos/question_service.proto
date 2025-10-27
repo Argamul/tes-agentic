@@ -1,0 +1,213 @@
+syntax = "proto3";
+
+package question_service;
+
+// Question Service gRPC definitions
+service QuestionService {
+    rpc GetQuestion(GetQuestionRequest) returns (GetQuestionResponse);
+    rpc CreateQuestion(CreateQuestionRequest) returns (CreateQuestionResponse);
+    rpc UpdateQuestion(UpdateQuestionRequest) returns (UpdateQuestionResponse);
+    rpc DeleteQuestion(DeleteQuestionRequest) returns (DeleteQuestionResponse);
+    rpc ListQuestions(ListQuestionsRequest) returns (ListQuestionsResponse);
+    rpc GetUserQuestions(GetUserQuestionsRequest) returns (GetUserQuestionsResponse);
+    rpc SearchQuestions(SearchQuestionsRequest) returns (SearchQuestionsResponse);
+    rpc GetQuestionAnswers(GetQuestionAnswersRequest) returns (GetQuestionAnswersResponse);
+    rpc CreateAnswer(CreateAnswerRequest) returns (CreateAnswerResponse);
+    rpc UpdateAnswer(UpdateAnswerRequest) returns (UpdateAnswerResponse);
+    rpc DeleteAnswer(DeleteAnswerRequest) returns (DeleteAnswerResponse);
+}
+
+message Question {
+    string id = 1;
+    string user_id = 2;
+    string title = 3;
+    string content = 4;
+    string type = 5;
+    string category = 6;
+    repeated string tags = 7;
+    string difficulty = 8;
+    int64 created_at = 9;
+    int64 updated_at = 10;
+    bool is_answered = 11;
+    int32 answer_count = 12;
+    int32 view_count = 13;
+    map<string, string> metadata = 14;
+}
+
+message Answer {
+    string id = 1;
+    string question_id = 2;
+    string user_id = 3;
+    string content = 4;
+    bool is_accepted = 5;
+    int32 upvotes = 6;
+    int32 downvotes = 7;
+    int64 created_at = 8;
+    int64 updated_at = 9;
+    map<string, string> metadata = 10;
+}
+
+message GetQuestionRequest {
+    string question_id = 1;
+}
+
+message GetQuestionResponse {
+    bool success = 1;
+    string message = 2;
+    Question question = 3;
+}
+
+message CreateQuestionRequest {
+    string user_id = 1;
+    string title = 2;
+    string content = 3;
+    string type = 4;
+    string category = 5;
+    repeated string tags = 6;
+    string difficulty = 7;
+    map<string, string> metadata = 8;
+}
+
+message CreateQuestionResponse {
+    bool success = 1;
+    string message = 2;
+    Question question = 3;
+}
+
+message UpdateQuestionRequest {
+    string question_id = 1;
+    string title = 2;
+    string content = 3;
+    string type = 4;
+    string category = 5;
+    repeated string tags = 6;
+    string difficulty = 7;
+    map<string, string> metadata = 8;
+}
+
+message UpdateQuestionResponse {
+    bool success = 1;
+    string message = 2;
+    Question question = 3;
+}
+
+message DeleteQuestionRequest {
+    string question_id = 1;
+}
+
+message DeleteQuestionResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message ListQuestionsRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    string category = 3;
+    string type = 4;
+    string difficulty = 5;
+    repeated string tags = 6;
+    string sort_by = 7;
+    bool sort_desc = 8;
+}
+
+message ListQuestionsResponse {
+    bool success = 1;
+    string message = 2;
+    repeated Question questions = 3;
+    int32 total_count = 4;
+    int32 page = 5;
+    int32 page_size = 6;
+}
+
+message GetUserQuestionsRequest {
+    string user_id = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+    string sort_by = 4;
+    bool sort_desc = 5;
+}
+
+message GetUserQuestionsResponse {
+    bool success = 1;
+    string message = 2;
+    repeated Question questions = 3;
+    int32 total_count = 4;
+    int32 page = 5;
+    int32 page_size = 6;
+}
+
+message SearchQuestionsRequest {
+    string query = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+    string category = 4;
+    string type = 5;
+    string difficulty = 6;
+    repeated string tags = 7;
+    string sort_by = 8;
+    bool sort_desc = 9;
+}
+
+message SearchQuestionsResponse {
+    bool success = 1;
+    string message = 2;
+    repeated Question questions = 3;
+    int32 total_count = 4;
+    int32 page = 5;
+    int32 page_size = 6;
+}
+
+message GetQuestionAnswersRequest {
+    string question_id = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+    string sort_by = 4;
+    bool sort_desc = 5;
+}
+
+message GetQuestionAnswersResponse {
+    bool success = 1;
+    string message = 2;
+    repeated Answer answers = 3;
+    int32 total_count = 4;
+    int32 page = 5;
+    int32 page_size = 6;
+}
+
+message CreateAnswerRequest {
+    string question_id = 1;
+    string user_id = 2;
+    string content = 3;
+    map<string, string> metadata = 4;
+}
+
+message CreateAnswerResponse {
+    bool success = 1;
+    string message = 2;
+    Answer answer = 3;
+}
+
+message UpdateAnswerRequest {
+    string answer_id = 1;
+    string content = 2;
+    map<string, string> metadata = 3;
+}
+
+message UpdateAnswerResponse {
+    bool success = 1;
+    string message = 2;
+    Answer answer = 3;
+}
+
+message DeleteAnswerRequest {
+    string answer_id = 1;
+}
+
+message DeleteAnswerResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+
+

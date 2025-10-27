@@ -1,0 +1,114 @@
+{
+  "sat_questions": {
+    "id": "sat_math_001",
+    "text": "If 2x + 3y = 12 and x - y = 1, what is the value of x?",
+    "type": "math",
+    "difficulty": "medium",
+    "subject": "algebra",
+    "answer_choices": [
+      "A) 3",
+      "B) 4",
+      "C) 5",
+      "D) 6"
+    ],
+    "correct_answer": "A",
+    "explanation": "Solve the system of equations: x = 3, y = 2"
+  },
+  "utbk_questions": {
+    "id": "utbk_physics_001",
+    "text": "Sebuah benda bermassa 2 kg bergerak dengan kecepatan 5 m/s. Berapakah momentum benda tersebut?",
+    "type": "physics",
+    "difficulty": "easy",
+    "subject": "fisika",
+    "language": "indonesian",
+    "answer_choices": [
+      "A) 2 kg⋅m/s",
+      "B) 5 kg⋅m/s",
+      "C) 10 kg⋅m/s",
+      "D) 25 kg⋅m/s"
+    ],
+    "correct_answer": "C",
+    "explanation": "p = mv = 2 kg × 5 m/s = 10 kg⋅m/s"
+  },
+  "student_profiles": {
+    "id": "student_001",
+    "name": "Alice Johnson",
+    "email": "alice.johnson@example.com",
+    "grade": "12",
+    "target_university": "MIT",
+    "test_type": "SAT",
+    "weak_subjects": [
+      "math"
+    ],
+    "strong_subjects": [
+      "reading",
+      "writing"
+    ],
+    "study_goals": [
+      "improve algebra",
+      "practice geometry"
+    ]
+  },
+  "educational_materials": {
+    "id": "material_001",
+    "title": "SAT Math Formula Sheet",
+    "content": "Important formulas for SAT Mathematics: Area of circle = πr², Quadratic formula = (-b ± √(b²-4ac))/2a, Distance formula = √((x₂-x₁)² + (y₂-y₁)²)",
+    "type": "reference",
+    "subject": "math",
+    "difficulty": "all"
+  },
+  "api_examples": {
+    "llm_generate": {
+      "text": "Explain how to solve this SAT math problem: If 2x + 3y = 12 and x - y = 1, what is the value of x?",
+      "model": "gpt-3.5-turbo"
+    },
+    "embedding_generate": {
+      "text": "SAT math problem about quadratic equations",
+      "model": "all-MiniLM-L6-v2"
+    },
+    "hybrid_search": {
+      "query": "SAT math problems about algebra",
+      "top_k": 10,
+      "alpha": 0.6,
+      "filter": {
+        "type": "question",
+        "subject": "math"
+      }
+    },
+    "ingest_documents": {
+      "texts": [
+        "If 2x + 3y = 12 and x - y = 1, what is the value of x?",
+        "What is the area of a circle with radius 5?"
+      ],
+      "metadata_list": [
+        {
+          "type": "question",
+          "subject": "math",
+          "test_type": "SAT"
+        },
+        {
+          "type": "question",
+          "subject": "geometry",
+          "test_type": "SAT"
+        }
+      ]
+    },
+    "agent_execute": {
+      "query": "Calculate the derivative of x² + 3x - 2 and explain the steps",
+      "tools": [
+        "calculator",
+        "math"
+      ]
+    },
+    "login": {
+      "email": "student@example.com",
+      "password": "securepassword123"
+    },
+    "register": {
+      "email": "newstudent@example.com",
+      "password": "securepassword123",
+      "username": "newstudent",
+      "role": "student"
+    }
+  }
+}

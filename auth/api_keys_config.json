@@ -1,0 +1,135 @@
+[
+  {
+    "key": "admin-key-12345",
+    "key_id": "admin-001",
+    "name": "Admin API Key",
+    "roles": ["admin"],
+    "permissions": [
+      "external_api_access",
+      "create_user",
+      "read_user",
+      "update_user",
+      "delete_user",
+      "create_course",
+      "read_course",
+      "update_course",
+      "delete_course",
+      "create_content",
+      "read_content",
+      "update_content",
+      "delete_content",
+      "create_question",
+      "read_question",
+      "update_question",
+      "delete_question",
+      "read_analytics",
+      "read_reports",
+      "manage_system",
+      "manage_tools",
+      "manage_agents"
+    ],
+    "is_active": true,
+    "expires_at": null,
+    "created_at": 1704067200,
+    "metadata": {
+      "description": "Full admin access API key",
+      "department": "engineering",
+      "path_permissions": {
+        "/external/.*": true
+      }
+    }
+  },
+  {
+    "key": "teacher-key-67890",
+    "key_id": "teacher-001",
+    "name": "Teacher API Key",
+    "roles": ["teacher"],
+    "permissions": [
+      "external_api_access",
+      "read_user",
+      "create_course",
+      "read_course",
+      "update_course",
+      "create_content",
+      "read_content",
+      "update_content",
+      "create_question",
+      "read_question",
+      "update_question",
+      "read_analytics",
+      "read_reports",
+      "manage_tools",
+      "manage_agents"
+    ],
+    "is_active": true,
+    "expires_at": null,
+    "created_at": 1704067200,
+    "metadata": {
+      "description": "Teacher access API key",
+      "department": "education",
+      "path_permissions": {
+        "/external/llm/.*": true,
+        "/external/embedding/.*": true
+      }
+    }
+  },
+  {
+    "key": "student-key-11111",
+    "key_id": "student-001",
+    "name": "Student API Key",
+    "roles": ["student"],
+    "permissions": [
+      "external_api_access",
+      "read_user",
+      "read_course",
+      "read_content",
+      "create_question",
+      "read_question"
+    ],
+    "is_active": true,
+    "expires_at": null,
+    "created_at": 1704067200,
+    "metadata": {
+      "description": "Student access API key",
+      "department": "education",
+      "path_permissions": {
+        "/external/status": true,
+        "/external/health": true
+      }
+    }
+  },
+  {
+    "key": "readonly-key-22222",
+    "key_id": "readonly-001",
+    "name": "Read-Only API Key",
+    "roles": [],
+    "permissions": [
+      "external_api_access"
+    ],
+    "is_active": true,
+    "expires_at": 1735689600,
+    "created_at": 1704067200,
+    "metadata": {
+      "description": "Read-only access for monitoring",
+      "department": "operations",
+      "path_permissions": {
+        "/external/status": true,
+        "/external/health": true
+      }
+    }
+  },
+  {
+    "key": "expired-key-33333",
+    "key_id": "expired-001",
+    "name": "Expired API Key",
+    "roles": ["admin"],
+    "permissions": ["external_api_access"],
+    "is_active": false,
+    "expires_at": 1609459200,
+    "created_at": 1609459200,
+    "metadata": {
+      "description": "This key is inactive for testing",
+      "department": "testing"
+    }
+  }
+]

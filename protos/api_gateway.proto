@@ -1,0 +1,147 @@
+syntax = "proto3";
+
+package api_gateway;
+
+// API Gateway gRPC definitions
+service APIGateway {
+    rpc ProxyRequest(ProxyRequestMessage) returns (ProxyResponseMessage);
+    rpc RouteRequest(RouteRequestMessage) returns (RouteResponseMessage);
+    rpc ValidateRequest(ValidateRequestMessage) returns (ValidateResponseMessage);
+    rpc GetServiceHealth(GetServiceHealthRequest) returns (GetServiceHealthResponse);
+    rpc GetServiceMetrics(GetServiceMetricsRequest) returns (GetServiceMetricsResponse);
+    rpc LoadBalanceRequest(LoadBalanceRequestMessage) returns (LoadBalanceResponseMessage);
+    rpc RateLimitCheck(RateLimitCheckRequest) returns (RateLimitCheckResponse);
+    rpc AuthenticateRequest(AuthenticateRequestMessage) returns (AuthenticateResponseMessage);
+}
+
+message ProxyRequestMessage {
+    string method = 1;
+    string path = 2;
+    map<string, string> headers = 3;
+    string body = 4;
+    map<string, string> query_params = 5;
+    string target_service = 6;
+    int32 timeout_seconds = 7;
+}
+
+message ProxyResponseMessage {
+    bool success = 1;
+    int32 status_code = 2;
+    string message = 3;
+    map<string, string> headers = 4;
+    string body = 5;
+    int64 response_time_ms = 6;
+}
+
+message RouteRequestMessage {
+    string method = 1;
+    string path = 2;
+    map<string, string> headers = 3;
+    string body = 4;
+    map<string, string> query_params = 5;
+}
+
+message RouteResponseMessage {
+    bool success = 1;
+    string target_service = 2;
+    string target_path = 3;
+    map<string, string> headers = 4;
+    string message = 5;
+}
+
+message ValidateRequestMessage {
+    string method = 1;
+    string path = 2;
+    map<string, string> headers = 3;
+    string body = 4;
+    string user_id = 5;
+    repeated string user_roles = 6;
+    repeated string user_permissions = 7;
+}
+
+message ValidateResponseMessage {
+    bool success = 1;
+    string message = 2;
+    bool is_authorized = 3;
+    repeated string required_permissions = 4;
+    repeated string missing_permissions = 5;
+}
+
+message GetServiceHealthRequest {
+    string service_name = 1;
+}
+
+message GetServiceHealthResponse {
+    bool success = 1;
+    string message = 2;
+    string service_name = 3;
+    string status = 4;
+    int64 last_check = 5;
+    map<string, string> health_details = 6;
+}
+
+message GetServiceMetricsRequest {
+    string service_name = 1;
+    int64 start_time = 2;
+    int64 end_time = 3;
+}
+
+message GetServiceMetricsResponse {
+    bool success = 1;
+    string message = 2;
+    string service_name = 3;
+    int64 request_count = 4;
+    double average_response_time = 5;
+    int32 error_count = 6;
+    double error_rate = 7;
+    map<string, string> additional_metrics = 8;
+}
+
+message LoadBalanceRequestMessage {
+    string service_name = 1;
+    string request_id = 2;
+    map<string, string> request_context = 3;
+}
+
+message LoadBalanceResponseMessage {
+    bool success = 1;
+    string message = 2;
+    string selected_instance = 3;
+    string instance_url = 4;
+    int32 instance_load = 5;
+}
+
+message RateLimitCheckRequest {
+    string user_id = 1;
+    string api_key = 2;
+    string endpoint = 3;
+    string service_name = 4;
+}
+
+message RateLimitCheckResponse {
+    bool success = 1;
+    string message = 2;
+    bool is_allowed = 3;
+    int32 remaining_requests = 4;
+    int64 reset_time = 5;
+    int32 limit = 6;
+}
+
+message AuthenticateRequestMessage {
+    string token = 1;
+    string api_key = 2;
+    string service_name = 3;
+}
+
+message AuthenticateResponseMessage {
+    bool success = 1;
+    string message = 2;
+    bool is_authenticated = 3;
+    string user_id = 4;
+    repeated string user_roles = 5;
+    repeated string user_permissions = 6;
+    int64 expires_at = 7;
+}
+
+
+

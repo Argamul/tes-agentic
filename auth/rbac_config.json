@@ -1,0 +1,143 @@
+{
+  "routes": [
+    {
+      "path_pattern": "^/admin/.*",
+      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      "required_roles": ["admin"],
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/teacher/.*",
+      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      "required_roles": ["teacher", "admin"],
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/student/.*",
+      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      "required_roles": ["student", "teacher", "admin"],
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/courses/.*",
+      "methods": ["GET"],
+      "required_roles": ["student", "teacher", "admin"],
+      "required_permissions": ["read_course"],
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/courses/.*",
+      "methods": ["POST", "PUT", "DELETE"],
+      "required_roles": ["teacher", "admin"],
+      "required_permissions": ["create_course", "update_course", "delete_course"],
+      "require_all_permissions": false,
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/content/.*",
+      "methods": ["GET"],
+      "required_roles": ["student", "teacher", "admin"],
+      "required_permissions": ["read_content"],
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/content/.*",
+      "methods": ["POST", "PUT", "DELETE"],
+      "required_roles": ["teacher", "admin"],
+      "required_permissions": ["create_content", "update_content", "delete_content"],
+      "require_all_permissions": false,
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/questions/.*",
+      "methods": ["GET"],
+      "required_roles": ["student", "teacher", "admin"],
+      "required_permissions": ["read_question"],
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/questions/.*",
+      "methods": ["POST"],
+      "required_roles": ["student", "teacher", "admin"],
+      "required_permissions": ["create_question"],
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/analytics/.*",
+      "methods": ["GET"],
+      "required_roles": ["teacher", "admin"],
+      "required_permissions": ["read_analytics"],
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/reports/.*",
+      "methods": ["GET"],
+      "required_roles": ["teacher", "admin"],
+      "required_permissions": ["read_reports"],
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/system/.*",
+      "methods": ["GET", "POST", "PUT", "DELETE"],
+      "required_roles": ["admin"],
+      "required_permissions": ["manage_system"],
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/users/.*",
+      "methods": ["GET"],
+      "required_roles": ["admin"],
+      "required_permissions": ["read_user"],
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/users/.*",
+      "methods": ["POST", "PUT", "DELETE"],
+      "required_roles": ["admin"],
+      "required_permissions": ["create_user", "update_user", "delete_user"],
+      "require_all_permissions": false,
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/external/.*",
+      "methods": ["GET", "POST", "PUT", "DELETE"],
+      "required_permissions": ["external_api_access"],
+      "allow_anonymous": false
+    },
+    {
+      "path_pattern": "^/health$",
+      "methods": ["GET"],
+      "allow_anonymous": true
+    },
+    {
+      "path_pattern": "^/docs$",
+      "methods": ["GET"],
+      "allow_anonymous": true
+    },
+    {
+      "path_pattern": "^/redoc$",
+      "methods": ["GET"],
+      "allow_anonymous": true
+    },
+    {
+      "path_pattern": "^/openapi\\.json$",
+      "methods": ["GET"],
+      "allow_anonymous": true
+    },
+    {
+      "path_pattern": "^/metrics$",
+      "methods": ["GET"],
+      "allow_anonymous": true
+    },
+    {
+      "path_pattern": "^/auth/login$",
+      "methods": ["POST"],
+      "allow_anonymous": true
+    },
+    {
+      "path_pattern": "^/auth/register$",
+      "methods": ["POST"],
+      "allow_anonymous": true
+    }
+  ]
+}

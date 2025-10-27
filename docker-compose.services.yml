@@ -1,0 +1,204 @@
+version: '3.8'
+
+services:
+  # Consul for service discovery
+  consul:
+    image: consul:1.15
+    container_name: consul
+    ports:
+      - "8500:8500"
+    command: agent -server -bootstrap-expect=1 -client=0.0.0.0 -ui
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    networks:
+      - service-mesh
+
+  # User Service (Mock)
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock-service
+    container_name: user-service
+    ports:
+      - "8001:8000"
+      - "50051:50051"
+    environment:
+      - SERVICE_NAME=user-service
+      - SERVICE_PORT=8000
+      - GRPC_PORT=50051
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+    depends_on:
+      - consul
+    networks:
+      - service-mesh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Question Service (Mock)
+  question-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock-service
+    container_name: question-service
+    ports:
+      - "8002:8000"
+      - "50052:50052"
+    environment:
+      - SERVICE_NAME=question-service
+      - SERVICE_PORT=8000
+      - GRPC_PORT=50052
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+    depends_on:
+      - consul
+    networks:
+      - service-mesh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Gateway (Mock)
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock-service
+    container_name: api-gateway
+    ports:
+      - "8003:8000"
+      - "50053:50053"
+    environment:
+      - SERVICE_NAME=api-gateway
+      - SERVICE_PORT=8000
+      - GRPC_PORT=50053
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+    depends_on:
+      - consul
+    networks:
+      - service-mesh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Elasticsearch for BM25 search
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    networks:
+      - service-mesh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Qdrant for vector search
+  qdrant:
+    image: qdrant/qdrant:v1.7.0
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    networks:
+      - service-mesh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Main NLP/AI Microservice
+  nlp-ai-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nlp-ai-service
+    ports:
+      - "8000:8000"
+    environment:
+      - SERVICE_NAME=nlp-ai-microservice
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+      - USER_SERVICE_URL=http://user-service:8000
+      - QUESTION_SERVICE_URL=http://question-service:8000
+      - API_GATEWAY_URL=http://api-gateway:8000
+      - USER_SERVICE_GRPC_TARGET=user-service:50051
+      - QUESTION_SERVICE_GRPC_TARGET=question-service:50052
+      - API_GATEWAY_GRPC_TARGET=api-gateway:50053
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - QDRANT_URL=http://qdrant:6333
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY}
+    depends_on:
+      - consul
+      - user-service
+      - question-service
+      - api-gateway
+      - elasticsearch
+      - qdrant
+    networks:
+      - service-mesh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - service-mesh
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_storage:/var/lib/grafana
+      - ./grafana/dashboard.json:/etc/grafana/provisioning/dashboards/dashboard.json
+    networks:
+      - service-mesh
+
+volumes:
+  qdrant_storage:
+  grafana_storage:
+
+networks:
+  service-mesh:
+    driver: bridge
+
+
+

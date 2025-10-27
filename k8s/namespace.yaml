@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nlp-ai
+  labels:
+    name: nlp-ai
+    app: nlp-ai-service
+    environment: production
+  annotations:
+    description: "Namespace for NLP/AI microservice with Redis caching and auto-scaling"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: nlp-ai-quota
+  namespace: nlp-ai
+spec:
+  hard:
+    requests.cpu: "10"
+    requests.memory: 20Gi
+    limits.cpu: "20"
+    limits.memory: 40Gi
+    persistentvolumeclaims: "10"
+    pods: "50"
+    services: "10"
+    secrets: "20"
+    configmaps: "20"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: nlp-ai-limits
+  namespace: nlp-ai
+spec:
+  limits:
+  - default:
+      cpu: "1000m"
+      memory: "2Gi"
+    defaultRequest:
+      cpu: "100m"
+      memory: "128Mi"
+    type: Container
+  - max:
+      storage: "50Gi"
+    min:
+      storage: "1Gi"
+    type: PersistentVolumeClaim
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nlp-ai-secrets
+  namespace: nlp-ai
+  labels:
+    app: nlp-ai-service
+type: Opaque
+data:
+  # Base64 encoded values - replace with actual encoded secrets
+  OPENAI_API_KEY: eW91cl9vcGVuYWlfYXBpX2tleV9oZXJl
+  ANTHROPIC_API_KEY: eW91cl9hbnRocm9waWNfYXBpX2tleV9oZXJl
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nlp-ai-config
+  namespace: nlp-ai
+  labels:
+    app: nlp-ai-service
+data:
+  # Service Configuration
+  SERVICE_NAME: "nlp-ai-microservice"
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  
+  # Redis Configuration
+  REDIS_CACHE_ENABLED: "true"
+  REDIS_CACHE_TTL_SECONDS: "600"
+  
+  # LLM Configuration
+  DEFAULT_LLM_PROVIDER: "openai"
+  LLM_PROVIDER_FALLBACK_ORDER: "openai,anthropic,llama"
+  TEMPERATURE: "0.7"
+  MAX_TOKENS: "1000"
+  
+  # Rate Limiting
+  RATE_LIMIT_REQUESTS: "100"
+  RATE_LIMIT_WINDOW_SECONDS: "60"
+  RATE_LIMIT_EXEMPT_PATHS: "/health,/metrics,/docs,/openapi.json,/redoc"
+  
+  # Monitoring
+  PROMETHEUS_METRICS_ENDPOINT: "/metrics"
+  
+  # Vector Database URLs
+  ELASTICSEARCH_URL: "http://elasticsearch-service:9200"
+  QDRANT_URL: "http://qdrant-service:6333"
+  CHROMA_PERSIST_DIRECTORY: "/app/data/chroma"
+  
+  # External Service URLs
+  USER_SERVICE_URL: "http://user-service:8001"
+  QUESTION_SERVICE_URL: "http://question-service:8002"
+  API_GATEWAY_URL: "http://api-gateway:8003"
+
+
+

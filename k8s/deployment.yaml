@@ -1,0 +1,308 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nlp-ai-service
+  namespace: nlp-ai
+  labels:
+    app: nlp-ai-service
+    version: v1.0.0
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: nlp-ai-service
+  template:
+    metadata:
+      labels:
+        app: nlp-ai-service
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: nlp-ai-service
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: api
+          image: your-registry/nlp-ai-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            # API Keys and Authentication
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nlp-ai-secrets
+                  key: OPENAI_API_KEY
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nlp-ai-secrets
+                  key: ANTHROPIC_API_KEY
+                  optional: true
+            
+            # Redis Configuration
+            - name: REDIS_URL
+              value: redis://redis-service:6379/0
+            - name: REDIS_CACHE_ENABLED
+              value: "true"
+            - name: REDIS_CACHE_TTL_SECONDS
+              value: "600"
+            
+            # LLM Configuration
+            - name: DEFAULT_LLM_PROVIDER
+              value: "openai"
+            - name: LLM_PROVIDER_FALLBACK_ORDER
+              value: "openai,anthropic,llama"
+            - name: TEMPERATURE
+              value: "0.7"
+            - name: MAX_TOKENS
+              value: "1000"
+            - name: OPENAI_DEFAULT_MODEL
+              value: "gpt-3.5-turbo"
+            - name: OPENAI_FALLBACK_MODEL
+              value: "gpt-3.5-turbo-16k"
+            
+            # Service Configuration
+            - name: SERVICE_NAME
+              value: nlp-ai-microservice
+            - name: PROMETHEUS_METRICS_ENDPOINT
+              value: /metrics
+            
+            # Rate Limiting
+            - name: RATE_LIMIT_REQUESTS
+              value: "100"
+            - name: RATE_LIMIT_WINDOW_SECONDS
+              value: "60"
+            - name: RATE_LIMIT_EXEMPT_PATHS
+              value: /health,/metrics,/docs,/openapi.json,/redoc
+            
+            # Logging and Environment
+            - name: LOG_LEVEL
+              value: INFO
+            - name: ENVIRONMENT
+              value: production
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: ""
+            
+            # Vector Database Configuration
+            - name: ELASTICSEARCH_URL
+              value: http://elasticsearch-service:9200
+            - name: QDRANT_URL
+              value: http://qdrant-service:6333
+            - name: CHROMA_PERSIST_DIRECTORY
+              value: /app/data/chroma
+            
+            # External Service URLs
+            - name: USER_SERVICE_URL
+              value: http://user-service:8001
+            - name: QUESTION_SERVICE_URL
+              value: http://question-service:8002
+            - name: API_GATEWAY_URL
+              value: http://api-gateway:8003
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2000m"
+              memory: "4Gi"
+          volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+            - name: logs-volume
+              mountPath: /app/logs
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 30
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: nlp-ai-data-pvc
+        - name: logs-volume
+          emptyDir: {}
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - key: "nlp-ai-workload"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - nlp-ai-service
+                topologyKey: kubernetes.io/hostname
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: nlp-ai
+  labels:
+    app: redis
+spec:
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
+  selector:
+    app: redis
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: nlp-ai
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          command:
+            - redis-server
+            - --appendonly
+            - "yes"
+            - --appendfsync
+            - "everysec"
+            - --maxmemory
+            - "256mb"
+            - --maxmemory-policy
+            - "allkeys-lru"
+            - --save
+            - "900 1"
+            - --save
+            - "300 10"
+            - --save
+            - "60 10000"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          livenessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: redis-data-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nlp-ai-data-pvc
+  namespace: nlp-ai
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data-pvc
+  namespace: nlp-ai
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nlp-ai-service
+  namespace: nlp-ai
+  labels:
+    app: nlp-ai-service
+
+
+

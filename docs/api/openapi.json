@@ -1,0 +1,1951 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "NLP/AI Microservice",
+    "description": "\n            ## NLP/AI Microservice for Educational Content\n\n            A comprehensive FastAPI microservice providing Natural Language Processing and Artificial Intelligence capabilities for educational applications, specifically designed for SAT and UTBK (Indonesian university entrance exam) preparation.\n\n            ### Key Features\n\n            * **LLM Integration**: Support for OpenAI GPT, Anthropic Claude, and local LLaMA models\n            * **Text Embeddings**: Generate embeddings using Sentence Transformers and OpenAI Ada\n            * **Vector Search**: Hybrid search combining BM25 (Elasticsearch) and semantic search (Qdrant)\n            * **Agent Execution**: AI agents with tool integration for complex problem solving\n            * **Educational Content**: Specialized support for SAT/UTBK questions and materials\n            * **RBAC Security**: Role-based access control with JWT and API key authentication\n            * **Multi-language**: Support for English (SAT) and Indonesian (UTBK) content\n\n            ### Educational Use Cases\n\n            * SAT Math, Reading, and Writing preparation\n            * UTBK Mathematics, Physics, Chemistry, and Biology questions\n            * Personalized study recommendations\n            * Automated question explanation generation\n            * Student progress tracking and analytics\n\n            ### Authentication\n\n            The API supports two authentication methods:\n            1. **JWT Tokens**: For user-based access with role-based permissions\n            2. **API Keys**: For external integrations and service-to-service communication\n\n            ### Rate Limiting\n\n            API requests are rate-limited to ensure fair usage:\n            - Default: 100 requests per minute per user/API key\n            - Exempt endpoints: `/health`, `/metrics`, `/docs`, `/openapi.json`, `/redoc`\n            ",
+    "version": "1.0.0",
+    "contact": {
+      "name": "NLP/AI Microservice Support",
+      "email": "support@nlp-ai-microservice.com",
+      "url": "https://github.com/your-org/nlp-ai-microservice"
+    },
+    "license": {
+      "name": "MIT License",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.nlp-ai-microservice.com",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "health",
+      "description": "Health check and system status endpoints"
+    },
+    {
+      "name": "llm",
+      "description": "Large Language Model operations for text generation and chat completion"
+    },
+    {
+      "name": "embeddings",
+      "description": "Text embedding generation for vector operations"
+    },
+    {
+      "name": "vector-search",
+      "description": "Vector database operations and similarity search"
+    },
+    {
+      "name": "hybrid-search",
+      "description": "Hybrid search combining BM25 and semantic search"
+    },
+    {
+      "name": "agents",
+      "description": "AI agent execution with tool integration"
+    },
+    {
+      "name": "tools",
+      "description": "Utility tools for AI agents (calculator, text analysis, etc.)"
+    },
+    {
+      "name": "orchestration",
+      "description": "Service orchestration and coordination endpoints"
+    },
+    {
+      "name": "external-services",
+      "description": "Integration with external services (User Service, Question Service, API Gateway)"
+    },
+    {
+      "name": "authentication",
+      "description": "User authentication, registration, and token management"
+    },
+    {
+      "name": "rbac",
+      "description": "Role-based access control endpoints for different user roles"
+    },
+    {
+      "name": "admin",
+      "description": "Administrative functions and system management"
+    },
+    {
+      "name": "analytics",
+      "description": "Analytics and reporting endpoints"
+    },
+    {
+      "name": "external-api",
+      "description": "External API endpoints requiring API key authentication"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token authentication for user-based access"
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key authentication for external integrations"
+      }
+    },
+    "schemas": {
+      "TextRequest": {
+        "description": "Text generation request model",
+        "properties": {
+          "text": {
+            "description": "The input text or prompt for generation",
+            "example": "Explain how to solve quadratic equations for SAT preparation",
+            "title": "Text",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "gpt-3.5-turbo",
+            "description": "The LLM model to use",
+            "example": "gpt-3.5-turbo",
+            "title": "Model"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "TextRequest",
+        "type": "object"
+      },
+      "TextResponse": {
+        "description": "Text generation response model",
+        "properties": {
+          "response": {
+            "description": "The generated text response",
+            "example": "Quadratic equations are polynomial equations of degree 2...",
+            "title": "Response",
+            "type": "string"
+          }
+        },
+        "required": [
+          "response"
+        ],
+        "title": "TextResponse",
+        "type": "object"
+      },
+      "EmbeddingRequest": {
+        "description": "Embedding generation request model",
+        "properties": {
+          "text": {
+            "description": "The text to convert to embeddings",
+            "example": "SAT math problem about quadratic equations",
+            "title": "Text",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "all-MiniLM-L6-v2",
+            "description": "The embedding model to use",
+            "example": "all-MiniLM-L6-v2",
+            "title": "Model"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "EmbeddingRequest",
+        "type": "object"
+      },
+      "EmbeddingResponse": {
+        "description": "Embedding generation response model",
+        "properties": {
+          "embedding": {
+            "description": "The embedding vector as a list of floating-point numbers",
+            "example": [
+              0.1,
+              0.2,
+              0.3,
+              0.4,
+              0.5
+            ],
+            "items": {
+              "type": "number"
+            },
+            "title": "Embedding",
+            "type": "array"
+          }
+        },
+        "required": [
+          "embedding"
+        ],
+        "title": "EmbeddingResponse",
+        "type": "object"
+      },
+      "BatchEmbeddingRequest": {
+        "description": "Batch embedding generation request model",
+        "properties": {
+          "text": {
+            "description": "The text to convert to embeddings",
+            "example": "SAT math problem about quadratic equations",
+            "title": "Text",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "all-MiniLM-L6-v2",
+            "description": "The embedding model to use",
+            "example": "all-MiniLM-L6-v2",
+            "title": "Model"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "BatchEmbeddingRequest",
+        "type": "object"
+      },
+      "BatchEmbeddingResponse": {
+        "description": "Batch embedding generation response model",
+        "properties": {
+          "embeddings": {
+            "description": "List of embedding vectors",
+            "example": [
+              [
+                0.1,
+                0.2,
+                0.3
+              ],
+              [
+                0.4,
+                0.5,
+                0.6
+              ]
+            ],
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "title": "Embeddings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "embeddings"
+        ],
+        "title": "BatchEmbeddingResponse",
+        "type": "object"
+      },
+      "VectorSearchRequest": {
+        "description": "Vector search request model",
+        "properties": {
+          "query": {
+            "description": "The search query",
+            "example": "quadratic equations",
+            "title": "Query",
+            "type": "string"
+          },
+          "top_k": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 5,
+            "description": "Number of results to return",
+            "example": 5,
+            "title": "Top K"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "VectorSearchRequest",
+        "type": "object"
+      },
+      "VectorSearchResponse": {
+        "description": "Vector search response model",
+        "properties": {
+          "results": {
+            "description": "List of search results with scores and metadata",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Results",
+            "type": "array"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "VectorSearchResponse",
+        "type": "object"
+      },
+      "HybridSearchRequest": {
+        "description": "Hybrid search request model",
+        "properties": {
+          "query": {
+            "description": "The search query",
+            "example": "SAT math problems about algebra",
+            "title": "Query",
+            "type": "string"
+          },
+          "top_k": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 10,
+            "description": "Number of results to return",
+            "example": 10,
+            "title": "Top K"
+          },
+          "alpha": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 0.6,
+            "description": "Weight for BM25 vs semantic search (0.0-1.0)",
+            "example": 0.6,
+            "title": "Alpha"
+          },
+          "filter": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional metadata filters",
+            "example": {
+              "subject": "math",
+              "type": "question"
+            },
+            "title": "Filter"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "HybridSearchRequest",
+        "type": "object"
+      },
+      "HybridSearchResponse": {
+        "description": "Hybrid search response model",
+        "properties": {
+          "results": {
+            "description": "List of hybrid search results with combined scores",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Results",
+            "type": "array"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "HybridSearchResponse",
+        "type": "object"
+      },
+      "IngestRequest": {
+        "description": "Document ingestion request model",
+        "properties": {
+          "texts": {
+            "description": "List of text documents to ingest",
+            "example": [
+              "SAT math problem 1",
+              "SAT math problem 2"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Texts",
+            "type": "array"
+          },
+          "metadata_list": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional metadata for each document",
+            "example": [
+              {
+                "subject": "math",
+                "type": "question"
+              },
+              {
+                "subject": "algebra",
+                "type": "question"
+              }
+            ],
+            "title": "Metadata List"
+          }
+        },
+        "required": [
+          "texts"
+        ],
+        "title": "IngestRequest",
+        "type": "object"
+      },
+      "IngestResponse": {
+        "description": "Document ingestion response model",
+        "properties": {
+          "elastic_ids": {
+            "description": "Document IDs from Elasticsearch",
+            "example": [
+              "doc_1",
+              "doc_2"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Elastic Ids",
+            "type": "array"
+          },
+          "qdrant_ids": {
+            "description": "Document IDs from Qdrant",
+            "example": [
+              "qdrant_1",
+              "qdrant_2"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Qdrant Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "elastic_ids",
+          "qdrant_ids"
+        ],
+        "title": "IngestResponse",
+        "type": "object"
+      },
+      "AgentRequest": {
+        "description": "Agent execution request model",
+        "properties": {
+          "query": {
+            "description": "The problem or question for the agent to solve",
+            "example": "Calculate the derivative of x² + 3x - 2 and explain the steps",
+            "title": "Query",
+            "type": "string"
+          },
+          "tools": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": [],
+            "description": "List of tools the agent can use",
+            "example": [
+              "calculator",
+              "math"
+            ],
+            "title": "Tools"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "AgentRequest",
+        "type": "object"
+      },
+      "AgentResponse": {
+        "description": "Agent execution response model",
+        "properties": {
+          "result": {
+            "description": "The agent's solution and reasoning process",
+            "example": "I'll help you solve this step by step using the calculator tool...",
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "AgentResponse",
+        "type": "object"
+      },
+      "LoginRequest": {
+        "description": "User login request model",
+        "properties": {
+          "email": {
+            "description": "User's email address",
+            "example": "student@example.com",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "description": "User's password",
+            "example": "securepassword123",
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "type": "object"
+      },
+      "LoginResponse": {
+        "description": "User login response model",
+        "properties": {
+          "access_token": {
+            "description": "JWT access token",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "title": "Access Token",
+            "type": "string"
+          },
+          "refresh_token": {
+            "description": "JWT refresh token",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "title": "Refresh Token",
+            "type": "string"
+          },
+          "token_type": {
+            "default": "bearer",
+            "description": "Token type",
+            "example": "bearer",
+            "title": "Token Type",
+            "type": "string"
+          },
+          "expires_in": {
+            "description": "Token expiration time in seconds",
+            "example": 3600,
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "user": {
+            "additionalProperties": true,
+            "description": "User information",
+            "example": {
+              "email": "student@example.com",
+              "id": "user_123",
+              "roles": [
+                "student"
+              ]
+            },
+            "title": "User",
+            "type": "object"
+          }
+        },
+        "required": [
+          "access_token",
+          "refresh_token",
+          "expires_in",
+          "user"
+        ],
+        "title": "LoginResponse",
+        "type": "object"
+      },
+      "RegisterRequest": {
+        "description": "User registration request model",
+        "properties": {
+          "email": {
+            "description": "User's email address",
+            "example": "newstudent@example.com",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "description": "User's password",
+            "example": "securepassword123",
+            "title": "Password",
+            "type": "string"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "User's username",
+            "example": "newstudent",
+            "title": "Username"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "student",
+            "description": "User's role",
+            "example": "student",
+            "title": "Role"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "RegisterRequest",
+        "type": "object"
+      },
+      "UserProfile": {
+        "description": "User profile model",
+        "properties": {
+          "user_id": {
+            "description": "User's unique identifier",
+            "example": "user_123",
+            "title": "User Id",
+            "type": "string"
+          },
+          "email": {
+            "description": "User's email address",
+            "example": "student@example.com",
+            "title": "Email",
+            "type": "string"
+          },
+          "username": {
+            "description": "User's username",
+            "example": "student",
+            "title": "Username",
+            "type": "string"
+          },
+          "roles": {
+            "description": "User's roles",
+            "example": [
+              "student"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Roles",
+            "type": "array"
+          },
+          "permissions": {
+            "description": "User's permissions",
+            "example": [
+              "read_questions",
+              "create_questions"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
+          "is_active": {
+            "description": "Whether the user account is active",
+            "example": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "description": "Additional user metadata",
+            "example": {
+              "grade": "12",
+              "target_university": "MIT"
+            },
+            "title": "Metadata",
+            "type": "object"
+          }
+        },
+        "required": [
+          "user_id",
+          "email",
+          "username",
+          "roles",
+          "permissions",
+          "is_active",
+          "metadata"
+        ],
+        "title": "UserProfile",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "description": "Health check response model",
+        "properties": {
+          "status": {
+            "description": "Service health status",
+            "example": "healthy",
+            "title": "Status",
+            "type": "string"
+          },
+          "service": {
+            "description": "Service name",
+            "example": "nlp-ai-microservice",
+            "title": "Service",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "service"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "description": "Error response model",
+        "properties": {
+          "detail": {
+            "description": "Error message",
+            "example": "Invalid request parameters",
+            "title": "Detail",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Error code",
+            "example": "INVALID_REQUEST",
+            "title": "Error Code"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Error timestamp",
+            "example": "2024-01-01T00:00:00Z",
+            "title": "Timestamp"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "SATQuestion": {
+        "$defs": {
+          "DifficultyLevel": {
+            "description": "Difficulty level enumeration",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ],
+            "title": "DifficultyLevel",
+            "type": "string"
+          },
+          "SubjectType": {
+            "description": "Subject type enumeration",
+            "enum": [
+              "math",
+              "reading",
+              "writing",
+              "science",
+              "physics",
+              "chemistry",
+              "biology",
+              "matematika",
+              "fisika",
+              "kimia"
+            ],
+            "title": "SubjectType",
+            "type": "string"
+          }
+        },
+        "description": "SAT question model",
+        "properties": {
+          "id": {
+            "description": "Question unique identifier",
+            "example": "sat_math_001",
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "description": "Question text",
+            "example": "If 2x + 3y = 12 and x - y = 1, what is the value of x?",
+            "title": "Text",
+            "type": "string"
+          },
+          "type": {
+            "description": "Question type",
+            "example": "math",
+            "title": "Type",
+            "type": "string"
+          },
+          "difficulty": {
+            "$ref": "#/$defs/DifficultyLevel",
+            "description": "Question difficulty level",
+            "example": "medium"
+          },
+          "subject": {
+            "$ref": "#/$defs/SubjectType",
+            "description": "Question subject",
+            "example": "algebra"
+          },
+          "answer_choices": {
+            "description": "Answer choices",
+            "example": [
+              "A) 3",
+              "B) 4",
+              "C) 5",
+              "D) 6"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Answer Choices",
+            "type": "array"
+          },
+          "correct_answer": {
+            "description": "Correct answer",
+            "example": "A",
+            "title": "Correct Answer",
+            "type": "string"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Question explanation",
+            "example": "Solve the system of equations: x = 3, y = 2",
+            "title": "Explanation"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "type",
+          "difficulty",
+          "subject",
+          "answer_choices",
+          "correct_answer"
+        ],
+        "title": "SATQuestion",
+        "type": "object"
+      },
+      "UTBKQuestion": {
+        "$defs": {
+          "DifficultyLevel": {
+            "description": "Difficulty level enumeration",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ],
+            "title": "DifficultyLevel",
+            "type": "string"
+          },
+          "LanguageType": {
+            "description": "Language type enumeration",
+            "enum": [
+              "english",
+              "indonesian"
+            ],
+            "title": "LanguageType",
+            "type": "string"
+          },
+          "SubjectType": {
+            "description": "Subject type enumeration",
+            "enum": [
+              "math",
+              "reading",
+              "writing",
+              "science",
+              "physics",
+              "chemistry",
+              "biology",
+              "matematika",
+              "fisika",
+              "kimia"
+            ],
+            "title": "SubjectType",
+            "type": "string"
+          }
+        },
+        "description": "UTBK question model",
+        "properties": {
+          "id": {
+            "description": "Question unique identifier",
+            "example": "utbk_math_001",
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "description": "Question text in Indonesian",
+            "example": "Jika f(x) = x² + 2x - 3, maka nilai f(-1) adalah...",
+            "title": "Text",
+            "type": "string"
+          },
+          "type": {
+            "description": "Question type",
+            "example": "math",
+            "title": "Type",
+            "type": "string"
+          },
+          "difficulty": {
+            "$ref": "#/$defs/DifficultyLevel",
+            "description": "Question difficulty level",
+            "example": "easy"
+          },
+          "subject": {
+            "$ref": "#/$defs/SubjectType",
+            "description": "Question subject",
+            "example": "matematika"
+          },
+          "language": {
+            "$ref": "#/$defs/LanguageType",
+            "description": "Question language",
+            "example": "indonesian"
+          },
+          "answer_choices": {
+            "description": "Answer choices",
+            "example": [
+              "A) -4",
+              "B) -2",
+              "C) 0",
+              "D) 2"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Answer Choices",
+            "type": "array"
+          },
+          "correct_answer": {
+            "description": "Correct answer",
+            "example": "A",
+            "title": "Correct Answer",
+            "type": "string"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Question explanation",
+            "example": "f(-1) = (-1)² + 2(-1) - 3 = 1 - 2 - 3 = -4",
+            "title": "Explanation"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "type",
+          "difficulty",
+          "subject",
+          "language",
+          "answer_choices",
+          "correct_answer"
+        ],
+        "title": "UTBKQuestion",
+        "type": "object"
+      },
+      "StudentProfile": {
+        "$defs": {
+          "TestType": {
+            "description": "Test type enumeration",
+            "enum": [
+              "SAT",
+              "UTBK"
+            ],
+            "title": "TestType",
+            "type": "string"
+          }
+        },
+        "description": "Student profile model",
+        "properties": {
+          "id": {
+            "description": "Student unique identifier",
+            "example": "student_001",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "description": "Student's name",
+            "example": "Alice Johnson",
+            "title": "Name",
+            "type": "string"
+          },
+          "email": {
+            "description": "Student's email",
+            "example": "alice.johnson@example.com",
+            "title": "Email",
+            "type": "string"
+          },
+          "grade": {
+            "description": "Student's grade level",
+            "example": "12",
+            "title": "Grade",
+            "type": "string"
+          },
+          "target_university": {
+            "description": "Target university",
+            "example": "MIT",
+            "title": "Target University",
+            "type": "string"
+          },
+          "test_type": {
+            "$ref": "#/$defs/TestType",
+            "description": "Test type (SAT or UTBK)",
+            "example": "SAT"
+          },
+          "weak_subjects": {
+            "description": "Subjects where student needs improvement",
+            "example": [
+              "math"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Weak Subjects",
+            "type": "array"
+          },
+          "strong_subjects": {
+            "description": "Student's strong subjects",
+            "example": [
+              "reading",
+              "writing"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Strong Subjects",
+            "type": "array"
+          },
+          "study_goals": {
+            "description": "Student's study goals",
+            "example": [
+              "improve algebra",
+              "practice geometry"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Study Goals",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "grade",
+          "target_university",
+          "test_type",
+          "weak_subjects",
+          "strong_subjects",
+          "study_goals"
+        ],
+        "title": "StudentProfile",
+        "type": "object"
+      },
+      "EducationalMaterial": {
+        "$defs": {
+          "DifficultyLevel": {
+            "description": "Difficulty level enumeration",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ],
+            "title": "DifficultyLevel",
+            "type": "string"
+          },
+          "SubjectType": {
+            "description": "Subject type enumeration",
+            "enum": [
+              "math",
+              "reading",
+              "writing",
+              "science",
+              "physics",
+              "chemistry",
+              "biology",
+              "matematika",
+              "fisika",
+              "kimia"
+            ],
+            "title": "SubjectType",
+            "type": "string"
+          }
+        },
+        "description": "Educational material model",
+        "properties": {
+          "id": {
+            "description": "Material unique identifier",
+            "example": "material_001",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "description": "Material title",
+            "example": "SAT Math Formula Sheet",
+            "title": "Title",
+            "type": "string"
+          },
+          "content": {
+            "description": "Material content",
+            "example": "Important formulas for SAT Mathematics: Area of circle = πr²...",
+            "title": "Content",
+            "type": "string"
+          },
+          "type": {
+            "description": "Material type",
+            "example": "reference",
+            "title": "Type",
+            "type": "string"
+          },
+          "subject": {
+            "$ref": "#/$defs/SubjectType",
+            "description": "Material subject",
+            "example": "math"
+          },
+          "difficulty": {
+            "$ref": "#/$defs/DifficultyLevel",
+            "description": "Material difficulty level",
+            "example": "all"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "content",
+          "type",
+          "subject",
+          "difficulty"
+        ],
+        "title": "EducationalMaterial",
+        "type": "object"
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    },
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health check endpoint",
+        "description": "Health check endpoint to verify service status.",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "healthy",
+                  "service": "nlp-ai-microservice"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/llm/generate": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Generate text using Large Language Models",
+        "description": "Supports multiple LLM providers including OpenAI GPT, Anthropic Claude, and local LLaMA models.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextRequest"
+              },
+              "example": {
+                "text": "Explain how to solve this SAT math problem: If 2x + 3y = 12 and x - y = 1, what is the value of x?",
+                "model": "gpt-3.5-turbo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated text response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextResponse"
+                },
+                "example": {
+                  "response": "To solve this system of equations, we can use substitution or elimination..."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/llm/chat": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Chat completion using Large Language Models",
+        "description": "Provides conversational AI capabilities for interactive tutoring and Q&A sessions.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextRequest"
+              },
+              "example": {
+                "text": "Help me understand this UTBK physics problem: Sebuah benda bermassa 2 kg bergerak dengan kecepatan 5 m/s. Berapakah momentum benda tersebut?",
+                "model": "gpt-3.5-turbo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Chat response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextResponse"
+                },
+                "example": {
+                  "response": "Momentum adalah besaran fisika yang didefinisikan sebagai hasil kali massa dan kecepatan..."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/embedding/generate": {
+      "post": {
+        "tags": [
+          "embeddings"
+        ],
+        "summary": "Generate text embeddings for vector operations",
+        "description": "Converts text into high-dimensional vectors for similarity search and semantic analysis.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmbeddingRequest"
+              },
+              "example": {
+                "text": "SAT math problem about quadratic equations",
+                "model": "all-MiniLM-L6-v2"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated embedding vector",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbeddingResponse"
+                },
+                "example": {
+                  "embedding": [
+                    0.1,
+                    0.2,
+                    0.3,
+                    0.4,
+                    0.5
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/embedding/batch": {
+      "post": {
+        "tags": [
+          "embeddings"
+        ],
+        "summary": "Generate embeddings for multiple texts in batch",
+        "description": "Efficiently processes multiple texts at once for better performance.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/EmbeddingRequest"
+                }
+              },
+              "example": [
+                {
+                  "text": "SAT math problem 1",
+                  "model": "all-MiniLM-L6-v2"
+                },
+                {
+                  "text": "SAT math problem 2",
+                  "model": "all-MiniLM-L6-v2"
+                }
+              ]
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated embedding vectors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchEmbeddingResponse"
+                },
+                "example": {
+                  "embeddings": [
+                    [
+                      0.1,
+                      0.2,
+                      0.3
+                    ],
+                    [
+                      0.4,
+                      0.5,
+                      0.6
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/hybrid": {
+      "post": {
+        "tags": [
+          "hybrid-search"
+        ],
+        "summary": "Perform hybrid search combining BM25 and semantic search",
+        "description": "Combines keyword-based search (BM25) with semantic similarity search for optimal results.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HybridSearchRequest"
+              },
+              "example": {
+                "query": "SAT math problems about algebra",
+                "top_k": 10,
+                "alpha": 0.6,
+                "filter": {
+                  "type": "question",
+                  "subject": "math"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Hybrid search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HybridSearchResponse"
+                },
+                "example": {
+                  "results": [
+                    {
+                      "id": "1",
+                      "document": "SAT math problem about algebra",
+                      "score": 0.95,
+                      "bm25_score": 0.9,
+                      "semantic_score": 0.8,
+                      "metadata": {
+                        "type": "question",
+                        "subject": "math"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/questions": {
+      "post": {
+        "tags": [
+          "hybrid-search"
+        ],
+        "summary": "Search specifically for questions in the educational database",
+        "description": "Filters search results to only include content marked as questions.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HybridSearchRequest"
+              },
+              "example": {
+                "query": "quadratic equations",
+                "top_k": 5,
+                "alpha": 0.7
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Question search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HybridSearchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/materials": {
+      "post": {
+        "tags": [
+          "hybrid-search"
+        ],
+        "summary": "Search specifically for educational materials and study guides",
+        "description": "Filters search results to only include content marked as materials.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HybridSearchRequest"
+              },
+              "example": {
+                "query": "physics formulas",
+                "top_k": 3,
+                "alpha": 0.5
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Material search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HybridSearchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ingest": {
+      "post": {
+        "tags": [
+          "vector-search"
+        ],
+        "summary": "Ingest documents into the vector database for search",
+        "description": "Adds documents to both BM25 (Elasticsearch) and semantic (Qdrant) search indexes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestRequest"
+              },
+              "example": {
+                "texts": [
+                  "If 2x + 3y = 12 and x - y = 1, what is the value of x?",
+                  "What is the area of a circle with radius 5?"
+                ],
+                "metadata_list": [
+                  {
+                    "type": "question",
+                    "subject": "math",
+                    "test_type": "SAT"
+                  },
+                  {
+                    "type": "question",
+                    "subject": "geometry",
+                    "test_type": "SAT"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Document ingestion results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestResponse"
+                },
+                "example": {
+                  "elastic_ids": [
+                    "doc_1",
+                    "doc_2"
+                  ],
+                  "qdrant_ids": [
+                    "qdrant_1",
+                    "qdrant_2"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent/execute": {
+      "post": {
+        "tags": [
+          "agents"
+        ],
+        "summary": "Execute AI agent with tool integration",
+        "description": "Runs an AI agent that can use various tools to solve complex problems.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentRequest"
+              },
+              "example": {
+                "query": "Calculate the derivative of x² + 3x - 2 and explain the steps",
+                "tools": [
+                  "calculator",
+                  "math"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agent execution result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponse"
+                },
+                "example": {
+                  "result": "I'll help you solve this step by step using the calculator tool..."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/list": {
+      "get": {
+        "tags": [
+          "tools"
+        ],
+        "summary": "List available tools for AI agents",
+        "description": "Returns a list of all available tools that can be used by AI agents.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of available tools",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tools": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "tools": [
+                    {
+                      "name": "calculator",
+                      "description": "Mathematical calculations"
+                    },
+                    {
+                      "name": "text_analysis",
+                      "description": "Text metrics and analysis"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "User login endpoint",
+        "description": "Authenticates users and returns JWT tokens for API access.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "email": "student@example.com",
+                "password": "securepassword123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                },
+                "example": {
+                  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                  "token_type": "bearer",
+                  "expires_in": 3600,
+                  "user": {
+                    "id": "user_123",
+                    "email": "student@example.com",
+                    "roles": [
+                      "student"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "User registration endpoint",
+        "description": "Creates a new user account in the system.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              },
+              "example": {
+                "email": "newstudent@example.com",
+                "password": "securepassword123",
+                "username": "newstudent",
+                "role": "student"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "User already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "tags": [
+          "rbac"
+        ],
+        "summary": "Get current user's profile information",
+        "description": "Returns the profile information of the currently authenticated user.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                },
+                "example": {
+                  "user_id": "user_123",
+                  "email": "student@example.com",
+                  "username": "student",
+                  "roles": [
+                    "student"
+                  ],
+                  "permissions": [
+                    "read_questions",
+                    "create_questions"
+                  ],
+                  "is_active": true,
+                  "metadata": {
+                    "grade": "12",
+                    "target_university": "MIT"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dashboard": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Admin dashboard with system overview",
+        "description": "Provides system statistics and administrative information.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin dashboard data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object"
+                    },
+                    "system_stats": {
+                      "type": "object"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Welcome to admin dashboard",
+                  "user": {
+                    "id": "admin_123",
+                    "email": "admin@example.com",
+                    "roles": [
+                      "admin"
+                    ]
+                  },
+                  "system_stats": {
+                    "total_users": 1250,
+                    "active_sessions": 89,
+                    "system_health": "healthy"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/external/status": {
+      "get": {
+        "tags": [
+          "external-api"
+        ],
+        "summary": "External API status endpoint",
+        "description": "External API status endpoint (requires API key).",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "External API status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "service": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "status": "ok",
+                  "service": "nlp-ai-microservice"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

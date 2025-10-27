@@ -1,0 +1,537 @@
+{
+  "info": {
+    "name": "NLP/AI Microservice API",
+    "description": "Comprehensive API collection for NLP/AI Microservice with SAT/UTBK educational content",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health check endpoint",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Generate text using Large Language Models",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/llm/generate",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "llm",
+            "generate"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"Explain how to solve this SAT math problem: If 2x + 3y = 12 and x - y = 1, what is the value of x?\",\n  \"model\": \"gpt-3.5-turbo\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Chat completion using Large Language Models",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/llm/chat",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "llm",
+            "chat"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"Help me understand this UTBK physics problem: Sebuah benda bermassa 2 kg bergerak dengan kecepatan 5 m/s. Berapakah momentum benda tersebut?\",\n  \"model\": \"gpt-3.5-turbo\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Generate text embeddings for vector operations",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/embedding/generate",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "embedding",
+            "generate"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"SAT math problem about quadratic equations\",\n  \"model\": \"all-MiniLM-L6-v2\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Generate embeddings for multiple texts in batch",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/embedding/batch",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "embedding",
+            "batch"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"text\": \"SAT math problem 1\",\n    \"model\": \"all-MiniLM-L6-v2\"\n  },\n  {\n    \"text\": \"SAT math problem 2\",\n    \"model\": \"all-MiniLM-L6-v2\"\n  }\n]",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Perform hybrid search combining BM25 and semantic search",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/search/hybrid",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "search",
+            "hybrid"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"SAT math problems about algebra\",\n  \"top_k\": 10,\n  \"alpha\": 0.6,\n  \"filter\": {\n    \"type\": \"question\",\n    \"subject\": \"math\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Search specifically for questions in the educational database",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/search/questions",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "search",
+            "questions"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"quadratic equations\",\n  \"top_k\": 5,\n  \"alpha\": 0.7\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Search specifically for educational materials and study guides",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/search/materials",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "search",
+            "materials"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"physics formulas\",\n  \"top_k\": 3,\n  \"alpha\": 0.5\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ingest documents into the vector database for search",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/ingest",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "ingest"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"texts\": [\n    \"If 2x + 3y = 12 and x - y = 1, what is the value of x?\",\n    \"What is the area of a circle with radius 5?\"\n  ],\n  \"metadata_list\": [\n    {\n      \"type\": \"question\",\n      \"subject\": \"math\",\n      \"test_type\": \"SAT\"\n    },\n    {\n      \"type\": \"question\",\n      \"subject\": \"geometry\",\n      \"test_type\": \"SAT\"\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Execute AI agent with tool integration",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/agent/execute",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "agent",
+            "execute"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"Calculate the derivative of x\\u00b2 + 3x - 2 and explain the steps\",\n  \"tools\": [\n    \"calculator\",\n    \"math\"\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List available tools for AI agents",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/tools/list",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "tools",
+            "list"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "User login endpoint",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/auth/login",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"student@example.com\",\n  \"password\": \"securepassword123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "User registration endpoint",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/auth/register",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "register"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"newstudent@example.com\",\n  \"password\": \"securepassword123\",\n  \"username\": \"newstudent\",\n  \"role\": \"student\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get current user's profile information",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/me",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Admin dashboard with system overview",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/admin/dashboard",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "dashboard"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "External API status endpoint",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "X-API-Key",
+            "value": "{{api_key}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/external/status",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "external",
+            "status"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

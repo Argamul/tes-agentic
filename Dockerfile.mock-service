@@ -1,0 +1,159 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies
+RUN pip install fastapi uvicorn httpx pydantic
+
+# Create a simple mock service
+COPY <<EOF /app/main.py
+from fastapi import FastAPI
+import uvicorn
+import os
+
+app = FastAPI(title="Mock Service", version="1.0.0")
+
+SERVICE_NAME = os.getenv("SERVICE_NAME", "mock-service")
+SERVICE_PORT = int(os.getenv("SERVICE_PORT", "8000"))
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "service": SERVICE_NAME}
+
+@app.get("/")
+async def root():
+    return {"message": f"Hello from {SERVICE_NAME}"}
+
+# Mock User Service endpoints
+if SERVICE_NAME == "user-service":
+    @app.get("/users/{user_id}")
+    async def get_user(user_id: str):
+        return {
+            "id": user_id,
+            "email": f"user{user_id}@example.com",
+            "username": f"user{user_id}",
+            "first_name": "John",
+            "last_name": "Doe",
+            "roles": ["student"],
+            "permissions": ["read_user"],
+            "is_active": True,
+            "created_at": 1640995200,
+            "updated_at": 1640995200,
+            "metadata": {}
+        }
+    
+    @app.get("/users/{user_id}/profile")
+    async def get_user_profile(user_id: str):
+        return {
+            "user_id": user_id,
+            "profile_data": {
+                "bio": "Student interested in AI/ML",
+                "interests": ["machine learning", "data science"],
+                "level": "beginner"
+            }
+        }
+
+# Mock Question Service endpoints
+elif SERVICE_NAME == "question-service":
+    @app.get("/users/{user_id}/questions")
+    async def get_user_questions(user_id: str, limit: int = 10):
+        questions = []
+        for i in range(min(limit, 5)):
+            questions.append({
+                "id": f"q{i+1}",
+                "user_id": user_id,
+                "title": f"Question {i+1}",
+                "content": f"This is question {i+1} about machine learning concepts.",
+                "type": "general",
+                "category": "AI/ML",
+                "tags": ["machine learning", "AI"],
+                "difficulty": "intermediate",
+                "created_at": 1640995200 + i * 3600,
+                "updated_at": 1640995200 + i * 3600,
+                "is_answered": i % 2 == 0,
+                "answer_count": i + 1,
+                "view_count": (i + 1) * 10,
+                "metadata": {}
+            })
+        return {
+            "questions": questions,
+            "total_count": len(questions),
+            "page": 1,
+            "page_size": limit
+        }
+    
+    @app.get("/questions/search")
+    async def search_questions(q: str, page: int = 1, page_size: int = 10):
+        questions = []
+        for i in range(min(page_size, 3)):
+            questions.append({
+                "id": f"search-q{i+1}",
+                "user_id": "user-123",
+                "title": f"Search Result {i+1}",
+                "content": f"This is a search result for '{q}' - question {i+1}.",
+                "type": "general",
+                "category": "AI/ML",
+                "tags": ["search", "result"],
+                "difficulty": "beginner",
+                "created_at": 1640995200 + i * 1800,
+                "updated_at": 1640995200 + i * 1800,
+                "is_answered": True,
+                "answer_count": 2,
+                "view_count": 25,
+                "metadata": {}
+            })
+        return {
+            "questions": questions,
+            "total_count": len(questions),
+            "page": page,
+            "page_size": page_size
+        }
+
+# Mock API Gateway endpoints
+elif SERVICE_NAME == "api-gateway":
+    @app.post("/gateway/route")
+    async def route_request(data: dict):
+        return {
+            "target_service": "user-service",
+            "target_path": data.get("path", "/"),
+            "headers": data.get("headers", {}),
+            "message": "Request routed successfully"
+        }
+    
+    @app.post("/gateway/validate")
+    async def validate_request(data: dict):
+        return {
+            "is_authorized": True,
+            "message": "Request authorized",
+            "required_permissions": ["read_user"],
+            "missing_permissions": []
+        }
+    
+    @app.get("/gateway/health/{service_name}")
+    async def get_service_health(service_name: str):
+        return {
+            "service_name": service_name,
+            "status": "healthy",
+            "last_check": 1640995200,
+            "health_details": {"uptime": "7 days", "version": "1.0.0"}
+        }
+    
+    @app.post("/gateway/rate-limit/check")
+    async def check_rate_limit(data: dict):
+        return {
+            "is_allowed": True,
+            "remaining_requests": 95,
+            "reset_time": 1640998800,
+            "limit": 100
+        }
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=SERVICE_PORT)
+EOF
+
+EXPOSE 8000
+
+CMD ["python", "main.py"]
+
+
+
